@@ -1,0 +1,42 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build APK Android
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Permissions Gradle
+        working-directory: artifacts/cde-app/android
+        run: chmod +x gradlew
+
+      - name: Compiler l'APK
+        working-directory: artifacts/cde-app/android
+        run: ./gradlew assembleRelease --no-daemon -Dorg.gradle.jvmargs="-Xmx4g"
+
+      - name: Publier l'APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: cde-nettoyage-apk
+          path: artifacts/cde-app/android/app/build/outputs/apk/release/app-release-unsigned.apk
+          retention-days: 30
+
+      - name: Résumé
+        run: |
+          echo "## ✅ APK prêt !" >> $GITHUB_STEP_SUMMARY
+          echo "Téléchargez l'APK dans la section **Artifacts** ci-dessous." >> $GITHUB_STEP_SUMMARY
