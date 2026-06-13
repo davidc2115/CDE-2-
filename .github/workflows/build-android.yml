@@ -26,9 +26,22 @@ jobs:
         with:
           node-version: '20'
 
+      # NOUVEAU : Nettoyage de sécurité pré-build
+      - name: Nettoyer les résidus obsolètes
+        working-directory: artifacts/cde-app
+        run: |
+          rm -rf node_modules
+          rm -rf android/.gradle
+          rm -rf android/app/build
+
       - name: Installer les dependances
         working-directory: artifacts/cde-app
         run: npm install --legacy-peer-deps
+
+      # NOUVEAU : Vérification stricte post-installation
+      - name: Securite post-install (Suppression forcee de worklets si present)
+        working-directory: artifacts/cde-app
+        run: rm -rf node_modules/react-native-worklets
 
       - name: Debug react-native depuis android
         working-directory: artifacts/cde-app/android
