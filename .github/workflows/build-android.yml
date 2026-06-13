@@ -26,7 +26,6 @@ jobs:
         with:
           node-version: '20'
 
-      # NOUVEAU : Nettoyage de sécurité pré-build
       - name: Nettoyer les résidus obsolètes
         working-directory: artifacts/cde-app
         run: |
@@ -38,7 +37,6 @@ jobs:
         working-directory: artifacts/cde-app
         run: npm install --legacy-peer-deps
 
-      # NOUVEAU : Vérification stricte post-installation
       - name: Securite post-install (Suppression forcee de worklets si present)
         working-directory: artifacts/cde-app
         run: rm -rf node_modules/react-native-worklets
@@ -84,6 +82,8 @@ jobs:
           NODE_OPTIONS: "--max-old-space-size=4096"
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
           REACT_NATIVE_VERSION: "0.81.5"
+          # AJOUT CRUCIAL : Indique à Reanimated où trouver l'exécutable node et expo-cli
+          PATH: /home/runner/work/CDE-2-/CDE-2-/artifacts/cde-app/node_modules/.bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
         run: ./gradlew assembleRelease --no-daemon -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m"
 
       - name: Localiser APK
