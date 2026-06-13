@@ -40,27 +40,18 @@ jobs:
           echo "=== @react-native/gradle-plugin path ==="
           node --print "require.resolve('@react-native/gradle-plugin/package.json', { paths: [require.resolve('react-native/package.json')] })" || echo "FAILED"
 
-      - name: Gradle init script (repositories pour tous les builds inclus)
-        run: |
-          mkdir -p ~/.gradle
-          cat > ~/.gradle/init.gradle << 'INITEOF'
-          allprojects {
-            buildscript {
-              repositories {
-                google()
-                mavenCentral()
-                gradlePluginPortal()
-                maven { url 'https://www.jitpack.io' }
-              }
-            }
-            repositories {
-              google()
-              mavenCentral()
-              gradlePluginPortal()
-              maven { url 'https://www.jitpack.io' }
-            }
-          }
-          INITEOF
+      - name: Gradle init script (repositories centralisées)
+  run: |
+    mkdir -p ~/.gradle
+    cat > ~/.gradle/init.gradle << 'INITEOF'
+    allprojects {
+      configurations.all {
+        resolutionStrategy {
+          force 'com.google.android.material:material:1.11.0'
+        }
+      }
+    }
+    INITEOF
 
       - name: Setup Gradle 8.13
         uses: gradle/actions/setup-gradle@v3
@@ -77,8 +68,7 @@ jobs:
           NODE_OPTIONS: "--max-old-space-size=4096"
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
           REACT_NATIVE_VERSION: "0.81.5"
-        run: ./gradlew assembleRelease --no-daemon -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m"
-
+        run: ./gradlew assembleRelease --no-daemon -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m" --warning-mode=fail
       - name: Localiser l'APK
         run: find artifacts/cde-app/android -name "*.apk" | head -5
 
