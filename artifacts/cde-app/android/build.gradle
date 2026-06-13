@@ -17,7 +17,14 @@ allprojects {
     google()
     mavenCentral()
     maven { url 'https://www.jitpack.io' }
-    maven { url 'https://maven.pkg.github.com/react-native-community/jsc-android-buildscripts' }
+  }
+
+  // Fix: JVM target must match between Java (javac) and Kotlin tasks
+  afterEvaluate {
+    tasks.withType(JavaCompile).configureEach {
+      sourceCompatibility = JavaVersion.VERSION_17
+      targetCompatibility = JavaVersion.VERSION_17
+    }
   }
 }
 
