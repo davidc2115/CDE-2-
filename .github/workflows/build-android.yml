@@ -69,7 +69,7 @@ jobs:
       - name: Setup Gradle (avec cache)
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: "8.10.2"
+          gradle-version: "8.13"
 
       - name: Permissions Gradle
         working-directory: artifacts/cde-app/android
