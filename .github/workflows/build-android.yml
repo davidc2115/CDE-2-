@@ -35,11 +35,41 @@ jobs:
         working-directory: artifacts/cde-app
         run: pnpm install --no-frozen-lockfile
 
+      - name: Gradle init script (repositories pour tous les builds inclus)
+        run: |
+          mkdir -p ~/.gradle
+          cat > ~/.gradle/init.gradle << 'INITEOF'
+          allprojects {
+            buildscript {
+              repositories {
+                google()
+                mavenCentral()
+                gradlePluginPortal()
+                maven { url 'https://www.jitpack.io' }
+              }
+            }
+            repositories {
+              google()
+              mavenCentral()
+              gradlePluginPortal()
+              maven { url 'https://www.jitpack.io' }
+            }
+          }
+          settingsEvaluated { settings ->
+            settings.pluginManagement {
+              repositories {
+                google()
+                mavenCentral()
+                gradlePluginPortal()
+              }
+            }
+          }
+          INITEOF
+
       - name: Setup Gradle (avec cache)
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: "8.10.2"
-          cache-read-only: false
 
       - name: Permissions Gradle
         working-directory: artifacts/cde-app/android
@@ -49,8 +79,8 @@ jobs:
         working-directory: artifacts/cde-app/android
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
-          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false"
-        run: ./gradlew assembleRelease --no-daemon --stacktrace -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m"
+          GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+        run: ./gradlew assembleRelease --no-daemon -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m"
 
       - name: Localiser l'APK
         run: find artifacts/cde-app/android -name "*.apk" | head -5
