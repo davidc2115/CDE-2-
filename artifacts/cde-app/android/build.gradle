@@ -17,21 +17,27 @@ allprojects {
     google()
     mavenCentral()
     maven { url 'https://www.jitpack.io' }
+    maven { url 'https://maven.pkg.github.com/react-native-community/jsc-android-buildscripts' }
   }
 }
 
 apply plugin: "expo-root-project"
 apply plugin: "com.facebook.react.rootproject"
 
-// Force react-native version 0.81.5 if auto-detection fails (empty version)
 subprojects { proj ->
   proj.configurations.all { config ->
+    // Substitue l'ancien artefact react-native par react-android (RN 0.71+)
+    config.resolutionStrategy.dependencySubstitution {
+      substitute(module("com.facebook.react:react-native"))
+        .using(module("com.facebook.react:react-android:0.81.5"))
+        .because("react-native artifact was renamed to react-android in RN 0.71+")
+    }
+    // Force la version 0.81.5 si la détection auto retourne vide
     config.resolutionStrategy.eachDependency { DependencyResolveDetails details ->
       if (details.requested.group == "com.facebook.react") {
-        def requested = details.requested.version
-        if (!requested || requested.isEmpty() || requested == ".") {
+        def v = details.requested.version
+        if (!v || v.isEmpty() || v == ".") {
           details.useVersion("0.81.5")
-          details.because("Force react-native 0.81.5 when auto-detection fails")
         }
       }
     }
