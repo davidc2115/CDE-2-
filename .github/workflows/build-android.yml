@@ -26,17 +26,19 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Installer les dépendances (npm - pas de symlinks pnpm)
+      - name: Installer les dépendances (npm - node_modules plat, pas de symlinks)
         working-directory: artifacts/cde-app
         run: npm install --legacy-peer-deps
 
-      - name: Vérifier react-native accessible
-        working-directory: artifacts/cde-app
+      - name: Debug - react-native depuis android/
+        working-directory: artifacts/cde-app/android
         run: |
-          echo "=== react-native package.json version ==="
-          node -e "console.log(require('./node_modules/react-native/package.json').version)"
-          echo "=== node_modules/react-native/android existe ==="
-          ls node_modules/react-native/android | head -5
+          echo "=== node version ==="
+          node --version
+          echo "=== react-native package.json ==="
+          node -e "const p=require.resolve('react-native/package.json'); console.log(p); console.log('version:', require(p).version)"
+          echo "=== @react-native/gradle-plugin path ==="
+          node --print "require.resolve('@react-native/gradle-plugin/package.json', { paths: [require.resolve('react-native/package.json')] })" || echo "FAILED"
 
       - name: Gradle init script (repositories pour tous les builds inclus)
         run: |
@@ -74,6 +76,7 @@ jobs:
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+          REACT_NATIVE_VERSION: "0.81.5"
         run: ./gradlew assembleRelease --no-daemon -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m"
 
       - name: Localiser l'APK

@@ -37,6 +37,15 @@ dependencyResolutionManagement {
   }
 }
 
+// Explicit react-native dir configuration to help version detection
+def reactNativePackageJson = new File(
+  providers.exec {
+    workingDir(rootDir)
+    commandLine("node", "--print", "require.resolve('react-native/package.json')")
+  }.standardOutput.asText.get().trim()
+)
+def reactNativeDir = reactNativePackageJson.getParentFile()
+
 extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
   if (System.getenv('EXPO_USE_COMMUNITY_AUTOLINKING') == '1') {
     ex.autolinkLibrariesFromCommand()

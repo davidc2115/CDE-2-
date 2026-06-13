@@ -14,14 +14,6 @@ buildscript {
 
 allprojects {
   repositories {
-    mavenLocal()
-    maven {
-      // react-native local artifacts (needed for version detection)
-      url("$rootDir/../node_modules/react-native/android")
-    }
-    maven {
-      url("$rootDir/../node_modules/jsc-android/dist")
-    }
     google()
     mavenCentral()
     maven { url 'https://www.jitpack.io' }
@@ -30,3 +22,18 @@ allprojects {
 
 apply plugin: "expo-root-project"
 apply plugin: "com.facebook.react.rootproject"
+
+// Force react-native version 0.81.5 if auto-detection fails (empty version)
+subprojects { proj ->
+  proj.configurations.all { config ->
+    config.resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+      if (details.requested.group == "com.facebook.react") {
+        def requested = details.requested.version
+        if (!requested || requested.isEmpty() || requested == ".") {
+          details.useVersion("0.81.5")
+          details.because("Force react-native 0.81.5 when auto-detection fails")
+        }
+      }
+    }
+  }
+}
