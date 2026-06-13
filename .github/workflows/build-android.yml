@@ -26,32 +26,35 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Installer les dépendances (npm - node_modules plat, pas de symlinks)
+      - name: Installer les dependances
         working-directory: artifacts/cde-app
         run: npm install --legacy-peer-deps
 
-      - name: Debug - react-native depuis android/
+      - name: Debug react-native depuis android
         working-directory: artifacts/cde-app/android
-        run: |
-          echo "=== node version ==="
-          node --version
-          echo "=== react-native package.json ==="
-          node -e "const p=require.resolve('react-native/package.json'); console.log(p); console.log('version:', require(p).version)"
-          echo "=== @react-native/gradle-plugin path ==="
-          node --print "require.resolve('@react-native/gradle-plugin/package.json', { paths: [require.resolve('react-native/package.json')] })" || echo "FAILED"
+        run: node -e "const p=require.resolve('react-native/package.json');console.log('rn path:',p,'version:',require(p).version)"
 
-      - name: Gradle init script (repositories centralisées)
-  run: |
-    mkdir -p ~/.gradle
-    cat > ~/.gradle/init.gradle << 'INITEOF'
-    allprojects {
-      configurations.all {
-        resolutionStrategy {
-          force 'com.google.android.material:material:1.11.0'
-        }
-      }
-    }
-    INITEOF
+      - name: Gradle init script
+        run: |
+          mkdir -p ~/.gradle
+          cat > ~/.gradle/init.gradle << INITEOF
+          allprojects {
+            buildscript {
+              repositories {
+                google()
+                mavenCentral()
+                gradlePluginPortal()
+                maven { url 'https://www.jitpack.io' }
+              }
+            }
+            repositories {
+              google()
+              mavenCentral()
+              gradlePluginPortal()
+              maven { url 'https://www.jitpack.io' }
+            }
+          }
+          INITEOF
 
       - name: Setup Gradle 8.13
         uses: gradle/actions/setup-gradle@v3
@@ -62,24 +65,23 @@ jobs:
         working-directory: artifacts/cde-app/android
         run: chmod +x gradlew
 
-      - name: Compiler l'APK
+      - name: Compiler APK
         working-directory: artifacts/cde-app/android
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
           REACT_NATIVE_VERSION: "0.81.5"
-        run: ./gradlew assembleRelease --no-daemon -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m" --warning-mode=fail
-      - name: Localiser l'APK
+        run: ./gradlew assembleRelease --no-daemon -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m"
+
+      - name: Localiser APK
         run: find artifacts/cde-app/android -name "*.apk" | head -5
 
-      - name: Publier l'APK
+      - name: Publier APK
         uses: actions/upload-artifact@v4
         with:
           name: cde-nettoyage-apk
           path: artifacts/cde-app/android/app/build/outputs/apk/release/*.apk
           retention-days: 30
 
-      - name: Résumé
-        run: |
-          echo "## ✅ APK prêt !" >> $GITHUB_STEP_SUMMARY
-          echo "Téléchargez l'APK dans la section **Artifacts** ci-dessous." >> $GITHUB_STEP_SUMMARY
+      - name: Resume
+        run: echo "APK disponible dans Artifacts" >> $GITHUB_STEP_SUMMARY
