@@ -41,18 +41,51 @@ jobs:
         working-directory: artifacts/cde-app
         run: rm -rf node_modules/react-native-worklets
 
+      - name: Gradle init script
+        run: |
+          mkdir -p ~/.gradle
+          cat > ~/.gradle/init.gradle << INITEOF
+          allprojects {
+            buildscript {
+              repositories {
+                google()
+                mavenCentral()
+                gradlePluginPortal()
+                maven { url 'https://www.jitpack.io' }
+              }
+            }
+            repositories {
+              google()
+              mavenCentral()
+              gradlePluginPortal()
+              maven { url 'https://www.jitpack.io' }
+            }
+          }
+          INITEOF
+
+      - name: Setup Gradle 8.13
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: "8.13"
+
       - name: Permissions Gradle
         working-directory: artifacts/cde-app/android
         run: chmod +x gradlew
 
-      - name: Compiler APK via Expo CLI
-        working-directory: artifacts/cde-app
+      - name: Compiler APK (Native Direct)
+        working-directory: artifacts/cde-app/android
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
-          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=\"-Xmx4g -XX:MaxMetaspaceSize=512m\""
+          GRADLE_OPTS: "-Dorg.gradle.daemon=false"
           REACT_NATIVE_VERSION: "0.81.5"
-        # npx instancie correctement l'environnement Node requis par Reanimated
-        run: npx expo run:android --variant release --no-dev
+        # On utilise l'exécutable node trouvé par le système via $(which node)
+        # et on le passe directement en paramètre à Gradle pour Reanimated et React Native.
+        run: |
+          NODE_PATH=$(which node)
+          ./gradlew assembleRelease --no-daemon \
+            -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m" \
+            -PnodeExecutableAndArgs="$NODE_PATH" \
+            -Preanimated.nodeExecutable="$NODE_PATH"
 
       - name: Localiser APK
         run: find artifacts/cde-app/android -name "*.apk" | head -5
