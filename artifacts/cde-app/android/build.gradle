@@ -44,18 +44,14 @@ subprojects { proj ->
 }
 
 // ---- Fix JVM Target Compatibility ----
-// gradle.projectsEvaluated runs AFTER every subproject has set its own
-// compileOptions (sourceCompatibility 1.8 in expo-modules-core).
-// We override here so Java and Kotlin both target 17.
+// expo-modules-core sets sourceCompatibility/targetCompatibility = 1.8 for Java.
+// We need Kotlin to also target JVM 1.8 to avoid the "Inconsistent JVM Target" error.
+// We do NOT touch JavaCompile tasks to avoid breaking the Android boot classpath.
 gradle.projectsEvaluated {
   subprojects { proj ->
-    proj.tasks.withType(JavaCompile).configureEach {
-      sourceCompatibility = JavaVersion.VERSION_17
-      targetCompatibility = JavaVersion.VERSION_17
-    }
     proj.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
       kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = "1.8"
       }
     }
   }
