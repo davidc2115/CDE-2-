@@ -26,14 +26,17 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Installer les dépendances
+      - name: Installer les dépendances (npm - pas de symlinks pnpm)
         working-directory: artifacts/cde-app
-        run: pnpm install --no-frozen-lockfile
+        run: npm install --legacy-peer-deps
+
+      - name: Vérifier react-native accessible
+        working-directory: artifacts/cde-app
+        run: |
+          echo "=== react-native package.json version ==="
+          node -e "console.log(require('./node_modules/react-native/package.json').version)"
+          echo "=== node_modules/react-native/android existe ==="
+          ls node_modules/react-native/android | head -5
 
       - name: Gradle init script (repositories pour tous les builds inclus)
         run: |
@@ -55,18 +58,9 @@ jobs:
               maven { url 'https://www.jitpack.io' }
             }
           }
-          settingsEvaluated { settings ->
-            settings.pluginManagement {
-              repositories {
-                google()
-                mavenCentral()
-                gradlePluginPortal()
-              }
-            }
-          }
           INITEOF
 
-      - name: Setup Gradle (avec cache)
+      - name: Setup Gradle 8.13
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: "8.13"
