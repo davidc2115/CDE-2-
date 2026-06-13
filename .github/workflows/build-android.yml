@@ -31,7 +31,8 @@ jobs:
         with:
           version: 10
 
-      - name: Installer les dépendances (monorepo)
+      - name: Installer les dépendances
+        working-directory: artifacts/cde-app
         run: pnpm install --no-frozen-lockfile
 
       - name: Permissions Gradle
@@ -51,8 +52,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cde-nettoyage-apk
-          path: |
-            artifacts/cde-app/android/app/build/outputs/apk/release/*.apk
+          path: artifacts/cde-app/android/app/build/outputs/apk/release/*.apk
           retention-days: 30
 
       - name: Résumé
