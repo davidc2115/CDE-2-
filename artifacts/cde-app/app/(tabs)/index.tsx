@@ -12,42 +12,19 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
-import { ServiceCard } from "@/components/ServiceCard";
+import { useAppConfig } from "@/contexts/AppConfigContext";
 
-const SERVICES_PREVIEW = [
-  {
-    id: "solaire",
-    title: "Panneaux Solaires",
-    description: "Nettoyage professionnel de vos panneaux photovoltaïques pour maximiser leur rendement.",
-    accentColor: "#F59E0B",
-    icon: "sun",
-  },
-  {
-    id: "toit",
-    title: "Démoussage de Toit",
-    description: "Traitement complet contre le mousse et les lichens pour prolonger la durée de vie de votre toiture.",
-    accentColor: "#10B981",
-    icon: "home",
-  },
-  {
-    id: "facade",
-    title: "Nettoyage de Façade",
-    description: "Ravalement et nettoyage haute pression de vos façades pour redonner éclat à votre bâtiment.",
-    accentColor: "#3B82F6",
-    icon: "layers",
-  },
-  {
-    id: "bardage",
-    title: "Bardage & Bas Acier",
-    description: "Pose, entretien et traitement de bardages et bas acier pour une finition durable et esthétique.",
-    accentColor: "#6366F1",
-    icon: "grid",
-  },
-];
+const SERVICE_ICONS: Record<string, string> = {
+  solaire: "sun",
+  toit: "home",
+  facade: "layers",
+  bardage: "grid",
+};
 
 export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { config } = useAppConfig();
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
@@ -58,49 +35,36 @@ export default function HomeScreen() {
       showsVerticalScrollIndicator={false}
     >
       {/* HERO */}
-      <View
-        style={[
-          styles.hero,
-          {
-            paddingTop: topPad + 20,
-            backgroundColor: colors.primary,
-          },
-        ]}
-      >
+      <View style={[styles.hero, { paddingTop: topPad + 20, backgroundColor: colors.primary }]}>
         <View style={styles.heroInner}>
           <Image
             source={require("../../assets/images/icon.png")}
             style={styles.heroLogo}
             resizeMode="contain"
           />
-          <Text style={styles.heroTitle}>CDE</Text>
-          <Text style={styles.heroSubtitle}>Nettoyage & Entretien</Text>
-          <Text style={styles.heroTagline}>
-            Experts en propreté extérieure{"\n"}au service de votre habitat
-          </Text>
+          <Text style={styles.heroTitle}>{config.company.name}</Text>
+          <Text style={styles.heroSubtitle}>{config.company.tagline.toUpperCase()}</Text>
+          <Text style={styles.heroTagline}>{config.company.description}</Text>
+
+          {/* Drone badge */}
+          <View style={styles.droneBadge}>
+            <Feather name="wind" size={14} color="#F59E0B" />
+            <Text style={styles.droneBadgeText}>DJI Matrice 350 RTK</Text>
+          </View>
 
           <Pressable
             onPress={() => router.push("/(tabs)/devis")}
-            style={({ pressed }) => [
-              styles.heroBtn,
-              { opacity: pressed ? 0.85 : 1 },
-            ]}
+            style={({ pressed }) => [styles.heroBtn, { opacity: pressed ? 0.85 : 1 }]}
           >
             <Text style={styles.heroBtnText}>Demander un devis gratuit</Text>
           </Pressable>
         </View>
-
-        {/* Wave */}
         <View style={[styles.wave, { backgroundColor: colors.background }]} />
       </View>
 
       {/* STATS ROW */}
       <View style={[styles.statsRow, { backgroundColor: colors.card }]}>
-        {[
-          { label: "Clients satisfaits", value: "500+" },
-          { label: "Années d'expérience", value: "10+" },
-          { label: "Interventions / an", value: "800+" },
-        ].map((s) => (
+        {config.stats.map((s) => (
           <View key={s.label} style={styles.statItem}>
             <Text style={[styles.statValue, { color: colors.primary }]}>{s.value}</Text>
             <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>{s.label}</Text>
@@ -116,9 +80,9 @@ export default function HomeScreen() {
         </Pressable>
       </View>
 
-      {/* SERVICE CARDS (compact) */}
+      {/* SERVICE CARDS */}
       <View style={styles.gridRow}>
-        {SERVICES_PREVIEW.map((s) => (
+        {config.services.map((s) => (
           <Pressable
             key={s.id}
             onPress={() => router.push("/(tabs)/services")}
@@ -133,18 +97,45 @@ export default function HomeScreen() {
             ]}
           >
             <View style={[styles.miniIcon, { backgroundColor: s.accentColor + "20" }]}>
-              <Feather name={s.icon as any} size={22} color={s.accentColor} />
+              <Feather name={(SERVICE_ICONS[s.id] ?? "tool") as any} size={22} color={s.accentColor} />
             </View>
             <Text style={[styles.miniTitle, { color: colors.foreground }]}>{s.title}</Text>
+            {s.price !== "Sur devis" && s.price ? (
+              <Text style={[styles.miniPrice, { color: s.accentColor }]}>{s.price}{s.priceUnit}</Text>
+            ) : null}
           </Pressable>
+        ))}
+      </View>
+
+      {/* DRONE SECTION */}
+      <View style={styles.sectionHeader}>
+        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Notre technologie</Text>
+      </View>
+      <View style={[styles.droneCard, { backgroundColor: "#0A1628", borderColor: colors.border }]}>
+        <View style={styles.droneHeader}>
+          <Feather name="wind" size={28} color="#F59E0B" />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.droneName}>DJI Matrice 350 RTK</Text>
+            <Text style={styles.droneTagline}>Drone industriel professionnel</Text>
+          </View>
+        </View>
+        {[
+          { icon: "shield" as const, text: "Zéro risque — aucune intervention humaine en hauteur" },
+          { icon: "crosshair" as const, text: "Précision centimétrique grâce au RTK" },
+          { icon: "zap" as const, text: "Jusqu'à 10× plus rapide qu'une équipe conventionnelle" },
+          { icon: "camera" as const, text: "Caméra 4K embarquée pour rapport photo/vidéo" },
+        ].map((item) => (
+          <View key={item.text} style={styles.dronePoint}>
+            <Feather name={item.icon} size={16} color="#F59E0B" />
+            <Text style={styles.dronePointText}>{item.text}</Text>
+          </View>
         ))}
       </View>
 
       {/* WHY US */}
       <View style={styles.sectionHeader}>
-        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Pourquoi nous choisir ?</Text>
+        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Pourquoi nous ?</Text>
       </View>
-
       <View style={[styles.whyCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
         {[
           { icon: "check-circle" as const, text: "Intervention rapide sous 48h" },
@@ -176,171 +167,54 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  hero: {
-    paddingBottom: 0,
+  hero: { paddingBottom: 0 },
+  heroInner: { alignItems: "center", paddingHorizontal: 24, paddingBottom: 48 },
+  heroLogo: { width: 80, height: 80, borderRadius: 20, marginBottom: 12, borderWidth: 2, borderColor: "rgba(255,255,255,0.3)" },
+  heroTitle: { fontFamily: "Inter_700Bold", fontSize: 36, color: "#FFFFFF", letterSpacing: 3 },
+  heroSubtitle: { fontFamily: "Inter_400Regular", fontSize: 13, color: "rgba(255,255,255,0.8)", marginBottom: 10, letterSpacing: 2 },
+  heroTagline: { fontFamily: "Inter_400Regular", fontSize: 15, color: "rgba(255,255,255,0.9)", textAlign: "center", lineHeight: 22, marginBottom: 12 },
+  droneBadge: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+    backgroundColor: "rgba(245,158,11,0.2)", borderRadius: 20,
+    paddingHorizontal: 14, paddingVertical: 6, marginBottom: 20,
+    borderWidth: 1, borderColor: "rgba(245,158,11,0.4)",
   },
-  heroInner: {
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingBottom: 48,
-  },
-  heroLogo: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.3)",
-  },
-  heroTitle: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 36,
-    color: "#FFFFFF",
-    letterSpacing: 3,
-  },
-  heroSubtitle: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 14,
-    color: "rgba(255,255,255,0.8)",
-    marginBottom: 12,
-    letterSpacing: 2,
-    textTransform: "uppercase",
-  },
-  heroTagline: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 16,
-    color: "rgba(255,255,255,0.9)",
-    textAlign: "center",
-    lineHeight: 24,
-    marginBottom: 24,
-  },
-  heroBtn: {
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 28,
-    paddingVertical: 14,
-    borderRadius: 30,
-  },
-  heroBtnText: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 15,
-    color: "#1565C0",
-  },
-  wave: {
-    height: 32,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    marginTop: -1,
-  },
+  droneBadgeText: { fontFamily: "Inter_600SemiBold", fontSize: 13, color: "#F59E0B" },
+  heroBtn: { backgroundColor: "#FFFFFF", paddingHorizontal: 28, paddingVertical: 14, borderRadius: 30 },
+  heroBtnText: { fontFamily: "Inter_700Bold", fontSize: 15, color: "#1565C0" },
+  wave: { height: 32, borderTopLeftRadius: 32, borderTopRightRadius: 32, marginTop: -1 },
   statsRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 20,
-    marginHorizontal: 16,
-    borderRadius: 16,
-    marginTop: 0,
-    marginBottom: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+    flexDirection: "row", justifyContent: "space-around", paddingVertical: 20,
+    marginHorizontal: 16, borderRadius: 16, marginBottom: 8,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
   },
-  statItem: {
-    alignItems: "center",
-    flex: 1,
-  },
-  statValue: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 22,
-  },
-  statLabel: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 11,
-    textAlign: "center",
-    marginTop: 2,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    marginTop: 24,
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 20,
-  },
-  sectionLink: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 14,
-  },
-  gridRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    paddingHorizontal: 12,
-    gap: 8,
-  },
+  statItem: { alignItems: "center", flex: 1 },
+  statValue: { fontFamily: "Inter_700Bold", fontSize: 22 },
+  statLabel: { fontFamily: "Inter_400Regular", fontSize: 11, textAlign: "center", marginTop: 2 },
+  sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, marginTop: 24, marginBottom: 12 },
+  sectionTitle: { fontFamily: "Inter_700Bold", fontSize: 20 },
+  sectionLink: { fontFamily: "Inter_600SemiBold", fontSize: 14 },
+  gridRow: { flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 12, gap: 8 },
   miniCard: {
-    width: "47%",
-    marginHorizontal: "1.5%",
-    padding: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    alignItems: "flex-start",
-    gap: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
+    width: "47%", marginHorizontal: "1.5%", padding: 14, borderRadius: 14,
+    borderWidth: 1, alignItems: "flex-start", gap: 8,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
   },
-  miniIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
+  miniIcon: { width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  miniTitle: { fontFamily: "Inter_600SemiBold", fontSize: 13, lineHeight: 18 },
+  miniPrice: { fontFamily: "Inter_700Bold", fontSize: 12 },
+  droneCard: {
+    marginHorizontal: 16, borderRadius: 16, borderWidth: 1, padding: 18, gap: 14,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 10, elevation: 4,
   },
-  miniTitle: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  whyCard: {
-    marginHorizontal: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 16,
-    gap: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  whyItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  whyText: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 15,
-    flex: 1,
-  },
-  ctaBottom: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    borderRadius: 16,
-    paddingVertical: 16,
-    marginTop: 24,
-  },
-  ctaBottomText: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 16,
-    color: "#FFFFFF",
-  },
+  droneHeader: { flexDirection: "row", alignItems: "center", gap: 14 },
+  droneName: { fontFamily: "Inter_700Bold", fontSize: 18, color: "#FFFFFF" },
+  droneTagline: { fontFamily: "Inter_400Regular", fontSize: 13, color: "rgba(255,255,255,0.6)" },
+  dronePoint: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
+  dronePointText: { fontFamily: "Inter_400Regular", fontSize: 14, color: "rgba(255,255,255,0.85)", flex: 1, lineHeight: 20 },
+  whyCard: { marginHorizontal: 16, borderRadius: 16, borderWidth: 1, padding: 16, gap: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
+  whyItem: { flexDirection: "row", alignItems: "center", gap: 12 },
+  whyText: { fontFamily: "Inter_400Regular", fontSize: 15, flex: 1 },
+  ctaBottom: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, borderRadius: 16, paddingVertical: 16, marginTop: 24 },
+  ctaBottomText: { fontFamily: "Inter_700Bold", fontSize: 16, color: "#FFFFFF" },
 });
