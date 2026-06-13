@@ -41,27 +41,17 @@ jobs:
         working-directory: artifacts/cde-app
         run: rm -rf node_modules/react-native-worklets
 
-      - name: Gradle init script
+      - name: Créer les liaisons d'environnement pour Reanimated
+        working-directory: artifacts/cde-app/android
         run: |
-          mkdir -p ~/.gradle
-          cat > ~/.gradle/init.gradle << INITEOF
-          allprojects {
-            buildscript {
-              repositories {
-                google()
-                mavenCentral()
-                gradlePluginPortal()
-                maven { url 'https://www.jitpack.io' }
-              }
-            }
-            repositories {
-              google()
-              mavenCentral()
-              gradlePluginPortal()
-              maven { url 'https://www.jitpack.io' }
-            }
-          }
-          INITEOF
+          # 1. Force la présence de node au niveau système local pour Gradle
+          sudo ln -sf $(which node) /usr/bin/node
+          sudo ln -sf $(which node) /usr/local/bin/node
+          
+          # 2. Crée un lien local de node directement dans le dossier android pour être introuvable
+          mkdir -p .bin
+          ln -s $(which node) .bin/node
+          echo "$(pwd)/.bin" >> $GITHUB_PATH
 
       - name: Setup Gradle 8.13
         uses: gradle/actions/setup-gradle@v3
@@ -72,21 +62,18 @@ jobs:
         working-directory: artifacts/cde-app/android
         run: chmod +x gradlew
 
-      - name: Compiler APK (Native Direct)
+      - name: Compiler APK (Native Direct Fix)
         working-directory: artifacts/cde-app/android
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
           REACT_NATIVE_VERSION: "0.81.5"
-        # On utilise l'exécutable node trouvé par le système via $(which node)
-        # et on le passe directement en paramètre à Gradle pour Reanimated et React Native.
+          # Injection du PATH absolu vers le binaire de node localisé
+          PATH: /home/runner/work/CDE-2-/CDE-2-/artifacts/cde-app/node_modules/.bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
         run: |
-          NODE_PATH=$(which node)
           ./gradlew assembleRelease --no-daemon \
-            -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m" \
-            -PnodeExecutableAndArgs="$NODE_PATH" \
-            -Preanimated.nodeExecutable="$NODE_PATH"
-
+            -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m"
+            
       - name: Localiser APK
         run: find artifacts/cde-app/android -name "*.apk" | head -5
 
