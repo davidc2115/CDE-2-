@@ -15,7 +15,7 @@ import { Feather } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import { useAppConfig, ServiceConfig } from "@/contexts/AppConfigContext";
 
-type AdminTab = "company" | "services" | "hours" | "stats" | "security";
+type AdminTab = "home" | "company" | "services" | "hours" | "stats" | "security";
 
 export default function AdminScreen() {
   const colors = useColors();
@@ -105,6 +105,7 @@ export default function AdminScreen() {
       <View style={[styles.tabBar, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabBarInner}>
           {([
+            { id: "home", label: "Accueil", icon: "home" },
             { id: "company", label: "Société", icon: "briefcase" },
             { id: "services", label: "Services", icon: "tool" },
             { id: "hours", label: "Horaires", icon: "clock" },
@@ -144,6 +145,9 @@ export default function AdminScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        {activeTab === "home" && (
+          <HomeTab colors={colors} config={config} updateConfig={updateConfig} />
+        )}
         {activeTab === "company" && (
           <CompanyTab colors={colors} config={config} updateConfig={updateConfig} />
         )}
@@ -222,6 +226,54 @@ function FieldInput({
         textAlignVertical={multiline ? "top" : "center"}
         keyboardType={keyboardType}
       />
+    </View>
+  );
+}
+
+function HomeTab({ colors, config, updateConfig }: any) {
+  const [form, setForm] = useState({ ...config.home });
+  return (
+    <View style={{ gap: 12 }}>
+      <SectionTitle title="Section héros" colors={colors} />
+      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <FieldInput label="Badge drone (ex: DJI Matrice 350 RTK)" value={form.heroBadge} onChangeText={(v: string) => setForm((f: any) => ({ ...f, heroBadge: v }))} colors={colors} />
+        <FieldInput label="Texte du bouton CTA" value={form.ctaLabel} onChangeText={(v: string) => setForm((f: any) => ({ ...f, ctaLabel: v }))} colors={colors} />
+        <SaveButton onSave={() => updateConfig({ home: form })} colors={colors} />
+      </View>
+
+      <SectionTitle title="Section « Pourquoi nous »" colors={colors} />
+      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <FieldInput label="Titre de section" value={form.whyUsTitle} onChangeText={(v: string) => setForm((f: any) => ({ ...f, whyUsTitle: v }))} colors={colors} />
+        <Text style={[styles.fieldLabel, { color: colors.foreground }]}>Points (un par ligne)</Text>
+        <TextInput
+          style={[styles.fieldInput, styles.fieldTextarea, { backgroundColor: colors.muted, color: colors.foreground, borderColor: "transparent", height: 160 }]}
+          value={form.whyUsPoints.join("\n")}
+          onChangeText={(v) => setForm((f: any) => ({ ...f, whyUsPoints: v.split("\n") }))}
+          multiline
+          textAlignVertical="top"
+          placeholder="Un point par ligne..."
+          placeholderTextColor={colors.mutedForeground}
+        />
+        <SaveButton onSave={() => updateConfig({ home: form })} colors={colors} />
+      </View>
+
+      <SectionTitle title="Section drone / technologie" colors={colors} />
+      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <FieldInput label="Titre section" value={form.droneTitle} onChangeText={(v: string) => setForm((f: any) => ({ ...f, droneTitle: v }))} colors={colors} />
+        <FieldInput label="Modèle drone (titre carte)" value={form.droneSubtitle} onChangeText={(v: string) => setForm((f: any) => ({ ...f, droneSubtitle: v }))} colors={colors} />
+        <FieldInput label="Sous-titre carte drone" value={form.droneModel} onChangeText={(v: string) => setForm((f: any) => ({ ...f, droneModel: v }))} colors={colors} />
+        <Text style={[styles.fieldLabel, { color: colors.foreground }]}>Caractéristiques drone (un par ligne)</Text>
+        <TextInput
+          style={[styles.fieldInput, styles.fieldTextarea, { backgroundColor: colors.muted, color: colors.foreground, borderColor: "transparent", height: 120 }]}
+          value={form.dronePoints.join("\n")}
+          onChangeText={(v) => setForm((f: any) => ({ ...f, dronePoints: v.split("\n") }))}
+          multiline
+          textAlignVertical="top"
+          placeholder="Une caractéristique par ligne..."
+          placeholderTextColor={colors.mutedForeground}
+        />
+        <SaveButton onSave={() => updateConfig({ home: form })} colors={colors} />
+      </View>
     </View>
   );
 }

@@ -1,5 +1,4 @@
 import { BlurView } from "expo-blur";
-import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import React from "react";
@@ -30,56 +29,24 @@ export default function TabLayout() {
         },
         tabBarBackground: () =>
           isIOS ? (
-            <BlurView
-              intensity={100}
-              tint={isDark ? "dark" : "light"}
-              style={StyleSheet.absoluteFill}
-            />
+            <BlurView intensity={100} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFill} />
           ) : isWeb ? (
             <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.card }]} />
           ) : null,
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Accueil",
-          tabBarIcon: ({ color }) =>
-            isIOS ? <SymbolView name="house.fill" tintColor={color} size={22} /> : <Feather name="home" size={22} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="services"
-        options={{
-          title: "Services",
-          tabBarIcon: ({ color }) =>
-            isIOS ? <SymbolView name="drone.fill" tintColor={color} size={22} /> : <Feather name="wind" size={22} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="devis"
-        options={{
-          title: "Devis",
-          tabBarIcon: ({ color }) =>
-            isIOS ? <SymbolView name="doc.text.fill" tintColor={color} size={22} /> : <Feather name="file-text" size={22} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="contact"
-        options={{
-          title: "Contact",
-          tabBarIcon: ({ color }) =>
-            isIOS ? <SymbolView name="phone.fill" tintColor={color} size={22} /> : <Feather name="phone" size={22} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="admin"
-        options={{
-          title: "Admin",
-          tabBarIcon: ({ color }) =>
-            isIOS ? <SymbolView name="gearshape.fill" tintColor={color} size={22} /> : <Feather name="settings" size={22} color={color} />,
-        }}
-      />
+      <Tabs.Screen name="index" options={{ title: "Accueil",
+        tabBarIcon: ({ color }) => isIOS ? <SymbolView name="house.fill" tintColor={color} size={22} /> : <Feather name="home" size={22} color={color} /> }} />
+      <Tabs.Screen name="services" options={{ title: "Services",
+        tabBarIcon: ({ color }) => isIOS ? <SymbolView name="wind" tintColor={color} size={22} /> : <Feather name="wind" size={22} color={color} /> }} />
+      <Tabs.Screen name="gestion" options={{ title: "Gestion",
+        tabBarIcon: ({ color }) => isIOS ? <SymbolView name="briefcase.fill" tintColor={color} size={22} /> : <Feather name="briefcase" size={22} color={color} /> }} />
+      <Tabs.Screen name="devis" options={{ title: "Devis",
+        tabBarIcon: ({ color }) => isIOS ? <SymbolView name="doc.text.fill" tintColor={color} size={22} /> : <Feather name="file-text" size={22} color={color} /> }} />
+      <Tabs.Screen name="contact" options={{ title: "Contact",
+        tabBarIcon: ({ color }) => isIOS ? <SymbolView name="phone.fill" tintColor={color} size={22} /> : <Feather name="phone" size={22} color={color} /> }} />
+      <Tabs.Screen name="admin" options={{ title: "Admin",
+        tabBarIcon: ({ color }) => isIOS ? <SymbolView name="gearshape.fill" tintColor={color} size={22} /> : <Feather name="settings" size={22} color={color} /> }} />
     </Tabs>
   );
 }

@@ -23,6 +23,16 @@ export interface AppConfig {
     address: string;
     zone: string;
   };
+  home: {
+    heroBadge: string;
+    ctaLabel: string;
+    whyUsTitle: string;
+    whyUsPoints: string[];
+    droneTitle: string;
+    droneSubtitle: string;
+    droneModel: string;
+    dronePoints: string[];
+  };
   hours: Array<{ day: string; time: string }>;
   services: ServiceConfig[];
   stats: Array<{ label: string; value: string }>;
@@ -40,6 +50,27 @@ export const DEFAULT_CONFIG: AppConfig = {
     email: "contact@cde-nettoyage.fr",
     address: "France",
     zone: "France métropolitaine",
+  },
+  home: {
+    heroBadge: "DJI Matrice 350 RTK",
+    ctaLabel: "Demander un devis gratuit",
+    whyUsTitle: "Pourquoi nous choisir ?",
+    whyUsPoints: [
+      "Technologie drone DJI Matrice 350 RTK de pointe",
+      "Aucun risque pour vos toitures et installations",
+      "Intervention rapide sans échafaudage",
+      "Rapport d'intervention photo/vidéo 4K inclus",
+      "Produits écologiques et certifiés",
+    ],
+    droneTitle: "Notre technologie",
+    droneSubtitle: "DJI Matrice 350 RTK",
+    droneModel: "Drone professionnel certifié S1",
+    dronePoints: [
+      "Positionnement centimétrique RTK",
+      "Caméra 4K intégrée pour rapports",
+      "Autonomie 55 min / charge utile 2,7 kg",
+      "Certifié vol professionnel (DGAC)",
+    ],
   },
   stats: [
     { label: "Clients satisfaits", value: "500+" },

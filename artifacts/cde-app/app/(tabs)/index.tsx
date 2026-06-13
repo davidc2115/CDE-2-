@@ -40,7 +40,7 @@ export default function HomeScreen() {
           <Image
             source={require("../../assets/images/icon.png")}
             style={styles.heroLogo}
-            resizeMode="contain"
+            resizeMode="cover"
           />
           <Text style={styles.heroTitle}>{config.company.name}</Text>
           <Text style={styles.heroSubtitle}>{config.company.tagline.toUpperCase()}</Text>
@@ -49,14 +49,14 @@ export default function HomeScreen() {
           {/* Drone badge */}
           <View style={styles.droneBadge}>
             <Feather name="wind" size={14} color="#F59E0B" />
-            <Text style={styles.droneBadgeText}>DJI Matrice 350 RTK</Text>
+            <Text style={styles.droneBadgeText}>{config.home?.heroBadge ?? "DJI Matrice 350 RTK"}</Text>
           </View>
 
           <Pressable
             onPress={() => router.push("/(tabs)/devis")}
             style={({ pressed }) => [styles.heroBtn, { opacity: pressed ? 0.85 : 1 }]}
           >
-            <Text style={styles.heroBtnText}>Demander un devis gratuit</Text>
+            <Text style={styles.heroBtnText}>{config.home?.ctaLabel ?? "Demander un devis gratuit"}</Text>
           </Pressable>
         </View>
         <View style={[styles.wave, { backgroundColor: colors.background }]} />
@@ -109,44 +109,44 @@ export default function HomeScreen() {
 
       {/* DRONE SECTION */}
       <View style={styles.sectionHeader}>
-        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Notre technologie</Text>
+        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{config.home?.droneTitle ?? "Notre technologie"}</Text>
       </View>
       <View style={[styles.droneCard, { backgroundColor: "#0A1628", borderColor: colors.border }]}>
         <View style={styles.droneHeader}>
           <Feather name="wind" size={28} color="#F59E0B" />
           <View style={{ flex: 1 }}>
-            <Text style={styles.droneName}>DJI Matrice 350 RTK</Text>
-            <Text style={styles.droneTagline}>Drone industriel professionnel</Text>
+            <Text style={styles.droneName}>{config.home?.droneSubtitle ?? "DJI Matrice 350 RTK"}</Text>
+            <Text style={styles.droneTagline}>{config.home?.droneModel ?? "Drone industriel professionnel"}</Text>
           </View>
         </View>
-        {[
-          { icon: "shield" as const, text: "Zéro risque — aucune intervention humaine en hauteur" },
-          { icon: "crosshair" as const, text: "Précision centimétrique grâce au RTK" },
-          { icon: "zap" as const, text: "Jusqu'à 10× plus rapide qu'une équipe conventionnelle" },
-          { icon: "camera" as const, text: "Caméra 4K embarquée pour rapport photo/vidéo" },
-        ].map((item) => (
-          <View key={item.text} style={styles.dronePoint}>
-            <Feather name={item.icon} size={16} color="#F59E0B" />
-            <Text style={styles.dronePointText}>{item.text}</Text>
+        {(config.home?.dronePoints ?? [
+          "Zéro risque — aucune intervention humaine en hauteur",
+          "Précision centimétrique grâce au RTK",
+          "Jusqu'à 10× plus rapide qu'une équipe conventionnelle",
+          "Caméra 4K embarquée pour rapport photo/vidéo",
+        ]).map((text, i) => (
+          <View key={i} style={styles.dronePoint}>
+            <Feather name="check" size={16} color="#F59E0B" />
+            <Text style={styles.dronePointText}>{text}</Text>
           </View>
         ))}
       </View>
 
       {/* WHY US */}
       <View style={styles.sectionHeader}>
-        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Pourquoi nous ?</Text>
+        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{config.home?.whyUsTitle ?? "Pourquoi nous ?"}</Text>
       </View>
       <View style={[styles.whyCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        {[
-          { icon: "check-circle" as const, text: "Intervention rapide sous 48h" },
-          { icon: "shield" as const, text: "Produits certifiés écologiques" },
-          { icon: "award" as const, text: "Devis gratuit et sans engagement" },
-          { icon: "users" as const, text: "Équipe formée et assurée" },
-          { icon: "star" as const, text: "Satisfaction garantie" },
-        ].map((item) => (
-          <View key={item.text} style={styles.whyItem}>
-            <Feather name={item.icon} size={18} color={colors.accent} />
-            <Text style={[styles.whyText, { color: colors.foreground }]}>{item.text}</Text>
+        {(config.home?.whyUsPoints ?? [
+          "Intervention rapide sous 48h",
+          "Produits certifiés écologiques",
+          "Devis gratuit et sans engagement",
+          "Équipe formée et assurée",
+          "Satisfaction garantie",
+        ]).map((text, i) => (
+          <View key={i} style={styles.whyItem}>
+            <Feather name="check-circle" size={18} color={colors.accent} />
+            <Text style={[styles.whyText, { color: colors.foreground }]}>{text}</Text>
           </View>
         ))}
       </View>
