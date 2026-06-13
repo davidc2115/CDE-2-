@@ -65,12 +65,27 @@ jobs:
         working-directory: artifacts/cde-app/android
         run: chmod +x gradlew
 
+      - name: Patch react-native-worklets CMake
+        working-directory: artifacts/cde-app
+        run: |
+          echo "=== Recherche du fichier CMakeLists.txt pour worklets ==="
+          CMAKE_FILE=$(find node_modules/ -path "*/react-native-worklets*/android/CMakeLists.txt" | head -n 1)
+          if [ -n "$CMAKE_FILE" ] && [ -f "$CMAKE_FILE" ]; then
+            echo "Fichier trouvé : $CMAKE_FILE"
+            echo "Application du patch pour injecter le fallback ReactAndroid::jsctooling..."
+            # Injection sécurisée après l'appel find_package
+            sed -i '/find_package(ReactAndroid REQUIRED)/a \if(NOT TARGET ReactAndroid::jsctooling)\n  add_library(ReactAndroid::jsctooling INTERFACE IMPORTED)\nendif()' "$CMAKE_FILE"
+            echo "Contenu après modification (aperçu) :"
+            grep -A 5 "find_package(ReactAndroid REQUIRED)" "$CMAKE_FILE"
+          else
+            echo "Alerte : Aucun fichier CMakeLists.txt trouvé pour worklets. Le build va tenter de continuer."
+          fi
+
       - name: Compiler APK
         working-directory: artifacts/cde-app/android
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
-          REACT_NATIVE_VERSION: "0.81.5"
         run: ./gradlew assembleRelease --no-daemon -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m"
 
       - name: Localiser APK
@@ -85,3 +100,4 @@ jobs:
 
       - name: Resume
         run: echo "APK disponible dans Artifacts" >> $GITHUB_STEP_SUMMARY
+        
