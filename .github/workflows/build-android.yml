@@ -1,4 +1,4 @@
-name: Build Android APK avec Expo
+name: Build Android APK avec Gradle
 
 on:
   push:
@@ -8,82 +8,61 @@ on:
 
 jobs:
   build:
-    name: Build APK Android Expo
+    name: Build APK via Gradle
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout du code
         uses: actions/checkout@v4
 
-      - name: Setup Java 17
+      - name: Configuration de Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Node.js
+      - name: Configuration de Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Nettoyer les résidus
-        run: |
-          cd artifacts/cde-app
-          rm -rf node_modules
-          rm -rf android/.gradle
-          rm -rf android/app/build
-          rm -f eas.json
-
-      - name: Installer les dependances
+      - name: Installation des dépendances npm
         run: |
           cd artifacts/cde-app
           npm install --legacy-peer-deps
 
-      - name: Securite post-install (Suppression forcee de worklets)
+      - name: Nettoyage des caches Gradle locaux
         run: |
-          cd artifacts/cde-app
-          rm -rf node_modules/react-native-worklets
+          cd artifacts/cde-app/android
+          rm -rf .gradle build app/build
 
-      - name: Forcer le fichier eas.json requis par Expo CLI
-        run: |
-          cd artifacts/cde-app
-          echo '{
-            "cli": { "version": ">= 0.0.0" },
-            "build": {
-              "release": { "distribution": "internal", "android": { "buildType": "apk" } }
-            }
-          }' > eas.json
-
-      - name: Préparer le cache Gradle
+      - name: Configuration du cache Gradle global
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: "8.13"
 
-      - name: Assurer les permissions Gradle
+      - name: Autoriser l'exécution de Gradle
         run: |
           cd artifacts/cde-app/android
           chmod +x gradlew
 
-      - name: Compilation Directe avec Expo CLI
+      - name: Compilation de l'APK (assembleRelease)
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
           GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=\"-Xmx4g -XX:MaxMetaspaceSize=512m\""
+          # Ligne magique : On indique à Gradle et Reanimated où trouver le binaire Node sous Linux
           NODE_BINARY: /usr/local/bin/node
-        # Remplacement clé : On entre physiquement dans le dossier de l'appli AVANT de lancer npx expo
         run: |
-          cd artifacts/cde-app
-          npx expo run:android --variant release --no-packager
+          cd artifacts/cde-app/android
+          ./gradlew assembleRelease --no-daemon
 
-      - name: Localiser l'APK Généré
-        run: find artifacts/cde-app/android -name "*.apk" | head -5
+      - name: Trouver l'APK généré
+        run: find artifacts/cde-app/android/app/build/outputs/apk/ -name "*.apk"
 
-      - name: Téléverser l'APK dans les Artifacts GitHub
+      - name: Téléverser l'APK final
         uses: actions/upload-artifact@v4
         with:
-          name: cde-expo-apk
+          name: cde-gradle-apk
           path: artifacts/cde-app/android/app/build/outputs/apk/release/*.apk
           retention-days: 30
-
-      - name: Résumé du Build
-        run: echo "L'APK compilé directement via Expo CLI est disponible au téléchargement." >> $GITHUB_STEP_SUMMARY
-        
+          
