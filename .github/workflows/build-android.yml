@@ -1,4 +1,4 @@
-name: Build Android APK avec Gradle
+name: Générer l'APK Android
 
 on:
   push:
@@ -8,70 +8,48 @@ on:
 
 jobs:
   build:
-    name: Build APK via Gradle
-    runs-on: ubuntu-latest
+    name: Générer l'APK via Gradle
+    runs-on: ubuntu-24.04
 
     steps:
-      - name: Checkout du code
+      - name: Exécuter actions/checkout@v4
         uses: actions/checkout@v4
 
-      - name: Configuration de Java 17
+      - name: Configurer Java JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
+          distribution: 'temurin'
           java-version: '17'
 
-      - name: Configuration de Node.js
+      - name: Configurer Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Installation des dépendances npm
+      - name: Installer les dépendances NPM
         run: |
           cd artifacts/cde-app
           npm install --legacy-peer-deps
 
-      - name: Nettoyage des caches Gradle locaux
+      - name: Nettoyer les anciens builds
         run: |
           cd artifacts/cde-app/android
           rm -rf .gradle build app/build
 
-      - name: Configuration du cache Gradle global
+      - name: Configurer Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: "8.13"
+          cache-disabled: true # Évite de planter à cause de la panne réseau de cache de GitHub
 
-      - name: Autoriser l'exécution de Gradle
+      - name: Compiler l'APK avec le Wrapper local
         run: |
           cd artifacts/cde-app/android
           chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
 
-      - name: Compilation de l'APK (assembleRelease)
-        env:
-          NODE_OPTIONS: "--max-old-space-size=4096"
-          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx4g"
-          NODE_BINARY: /usr/local/bin/node
-        run: |
-          cd artifacts/cde-app/android
-          ./gradlew assembleRelease --no-daemon --stacktrace 2>&1 | tee /tmp/gradle-full.log
-          exit ${PIPESTATUS[0]}
-
-      - name: Afficher les erreurs CMake si echec
-        if: failure()
-        run: |
-          echo "===== CMakeError.log ====="
-          find /home/runner/work -name "CMakeError.log" 2>/dev/null | while read f; do
-            echo "--- $f ---"; cat "$f"
-          done
-          echo "===== Extrait gradle-full.log (erreurs) ====="
-          grep -i "error\|CMake Error\|FAILED\|Exception\|fatal" /tmp/gradle-full.log | grep -v "warning" | head -80 || true
-
-      - name: Trouver l'APK genere
-        run: find artifacts/cde-app/android/app/build/outputs/apk/ -name "*.apk"
-
-      - name: Televerser l'APK final
+      - name: Téléverser l'APK généré
         uses: actions/upload-artifact@v4
         with:
-          name: cde-gradle-apk
-          path: artifacts/cde-app/android/app/build/outputs/apk/release/*.apk
-          retention-days: 30
+          name: app-release-apk
+          path: artifacts/cde-app/android/app/build/outputs/apk/release/app-release.apk
+          
