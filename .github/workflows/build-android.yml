@@ -47,47 +47,29 @@ jobs:
           chmod +x gradlew
 
       - name: Compilation de l'APK (assembleRelease)
-        continue-on-error: true
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
-          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=\"-Xmx4g -XX:MaxMetaspaceSize=512m\""
+          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx4g"
           NODE_BINARY: /usr/local/bin/node
         run: |
           cd artifacts/cde-app/android
-          ./gradlew assembleRelease --no-daemon --info 2>&1 | tee /tmp/gradle-full.log
-          # On conserve le code de retour réel
+          ./gradlew assembleRelease --no-daemon --stacktrace 2>&1 | tee /tmp/gradle-full.log
           exit ${PIPESTATUS[0]}
 
-      - name: Afficher les erreurs CMake détaillées
+      - name: Afficher les erreurs CMake si echec
         if: failure()
         run: |
           echo "===== CMakeError.log ====="
           find /home/runner/work -name "CMakeError.log" 2>/dev/null | while read f; do
-            echo "--- $f ---"
-            cat "$f"
+            echo "--- $f ---"; cat "$f"
           done
+          echo "===== Extrait gradle-full.log (erreurs) ====="
+          grep -i "error\|CMake Error\|FAILED\|Exception\|fatal" /tmp/gradle-full.log | grep -v "warning" | head -80 || true
 
-          echo "===== CMakeOutput.log ====="
-          find /home/runner/work -name "CMakeOutput.log" 2>/dev/null | while read f; do
-            echo "--- $f ---"
-            tail -50 "$f"
-          done
-
-          echo "===== Logs .log dans .cxx ====="
-          find /home/runner/work -path "*/.cxx/*" -name "*.log" 2>/dev/null | while read f; do
-            echo "--- $f ---"
-            cat "$f"
-          done
-
-          echo "===== Extrait gradle-full.log autour de 'error' ====="
-          grep -i "error\|CMake Error\|fatal" /tmp/gradle-full.log | head -60 || true
-
-      - name: Trouver l'APK généré
-        if: success()
+      - name: Trouver l'APK genere
         run: find artifacts/cde-app/android/app/build/outputs/apk/ -name "*.apk"
 
-      - name: Téléverser l'APK final
-        if: success()
+      - name: Televerser l'APK final
         uses: actions/upload-artifact@v4
         with:
           name: cde-gradle-apk
