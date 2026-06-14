@@ -31,7 +31,7 @@ def jscFlavor = 'org.webkit:android-jsc:+'
 android {
     ndkVersion "27.1.12297006"
     buildToolsVersion "35.0.0"
-    compileSdk 35
+    compileSdk 36
 
     namespace "com.cde.nettoyage"
 
