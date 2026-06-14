@@ -1,8 +1,4 @@
 {
-  "cli": {
-    "version": ">= 0.0.0",
-    "appDir": "artifacts/cde-app"
-  },
   "build": {
     "development": {
       "developmentClient": true,
