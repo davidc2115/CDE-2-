@@ -3,6 +3,23 @@ apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
 react {
+    // Use Expo CLI (export:embed) instead of react-native bundle
+    // This is required for Expo SDK 50+ apps that use expo-router
+    cliFile = new File(
+        ["node", "--print", "require.resolve('@expo/cli/package.json')"]
+            .execute(null, rootDir).text.trim()
+    ).getParentFile().getAbsoluteFile().getPath() + "/build/bin/cli"
+
+    bundleCommand = "export:embed"
+
+    // Resolve entry file via Expo's resolver (handles expo-router/entry)
+    entryFile = file(
+        ["node", "-e", "require('expo/scripts/resolveAppEntry')",
+         rootDir.getAbsoluteFile().getParentFile().getAbsolutePath(),
+         "android", "absolute"]
+            .execute(null, rootDir).text.trim()
+    )
+
     autolinkLibrariesWithApp()
 }
 
