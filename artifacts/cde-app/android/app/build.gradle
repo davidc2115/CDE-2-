@@ -30,10 +30,8 @@ def jscFlavor = 'org.webkit:android-jsc:+'
 
 android {
     ndkVersion "27.1.12297006"
-    buildToolsVersion "36.0.0" // Mis à jour de 35.0.0 à 36.0.0 (ou supprimez la ligne)
+    buildToolsVersion "36.0.0" 
     compileSdk 36
-    // ...
-}
 
     namespace "com.cde.nettoyage"
 
@@ -73,7 +71,7 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
-}
+} // Cette accolade ferme correctement le bloc android désormais
 
 dependencies {
     implementation("com.facebook.react:react-android")
