@@ -43,6 +43,71 @@ jobs:
         working-directory: artifacts/cde-app
         run: rm -rf node_modules/react-native-worklets
 
+      - name: Générer le fichier eas.json de secours
+        working-directory: artifacts/cde-app
+        run: |
+          cat > eas.json << 'EOF'
+          {
+            "cli": {
+              "version": ">= 0.0.0"
+            },
+            "build": {
+              "development": {
+                "developmentClient": true,
+                "distribution": "internal"
+              },
+              "preview": {
+                "distribution": "internal"
+              },
+              "release": {
+                "distribution": "internal"
+              }
+            },
+            "submit": {
+              "production": {}
+            }
+          }
+          EOF
+          echo "eas.json généré avec succès."
+
+      - name: Setup Gradle 8.13
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: "8.13"
+
+      - name: Permissions Gradle
+        working-directory: artifacts/cde-app/android
+        run: chmod +x gradlew
+
+      - name: Compiler APK via Expo CLI
+        working-directory: artifacts/cde-app
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=\"-Xmx4g -XX:MaxMetaspaceSize=512m\""
+          REACT_NATIVE_VERSION: "0.81.5"
+        run: npx expo run:android --variant release
+
+      - name: Localiser APK
+        run: find artifacts/cde-app/android -name "*.apk" | head -5
+
+      - name: Publier APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: cde-nettoyage-apk
+          path: artifacts/cde-app/android/app/build/outputs/apk/release/*.apk
+          retention-days: 30
+
+      - name: Resume
+        run: echo "APK disponible dans Artifacts" >> $GITHUB_STEP_SUMMARY
+        
+      - name: Installer les dependances
+        working-directory: artifacts/cde-app
+        run: npm install --legacy-peer-deps
+
+      - name: Securite post-install (Suppression forcee de worklets si present)
+        working-directory: artifacts/cde-app
+        run: rm -rf node_modules/react-native-worklets
+
       - name: Setup Gradle 8.13
         uses: gradle/actions/setup-gradle@v3
         with:
