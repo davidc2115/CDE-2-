@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "CDE Nettoyage",
-    "slug": "cde-app",
+    "slug": "cde",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -40,6 +40,11 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2251ac56-1478-4847-9a6e-8eee99b27858"
+      }
     }
   }
 }
