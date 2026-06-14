@@ -40,11 +40,20 @@ class MainApplication : Application(), ReactApplication {
 
   override fun onCreate() {
     super.onCreate()
+    
+    // Correction de la référence manquante à REACT_NATIVE_RELEASE_LEVEL
     DefaultNewArchitectureEntryPoint.releaseLevel = try {
-      ReleaseLevel.valueOf(BuildConfig.REACT_NATIVE_RELEASE_LEVEL.uppercase())
+      // On tente d'utiliser la variable de configuration, si elle n'existe pas, on bascule sur STABLE
+      val releaseLevelStr = try {
+        BuildConfig::class.java.getField("REACT_NATIVE_RELEASE_LEVEL").get(null) as String
+      } catch (_: Exception) {
+        "STABLE"
+      }
+      ReleaseLevel.valueOf(releaseLevelStr.uppercase())
     } catch (e: IllegalArgumentException) {
       ReleaseLevel.STABLE
     }
+    
     loadReactNative(this)
     ApplicationLifecycleDispatcher.onApplicationCreate(this)
   }
