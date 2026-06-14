@@ -25,13 +25,13 @@ apply plugin: "com.facebook.react.rootproject"
 
 subprojects { proj ->
   proj.configurations.all { config ->
-    // Substitue l'ancien artefact react-native par react-android (RN 0.71+)
+    // Substitue l ancien artefact react-native par react-android (RN 0.71+)
     config.resolutionStrategy.dependencySubstitution {
       substitute(module("com.facebook.react:react-native"))
         .using(module("com.facebook.react:react-android:0.81.5"))
         .because("react-native artifact was renamed to react-android in RN 0.71+")
     }
-    // Force la version 0.81.5 si la détection auto retourne vide
+    // Force la version 0.81.5 si la detection auto retourne vide
     config.resolutionStrategy.eachDependency { DependencyResolveDetails details ->
       if (details.requested.group == "com.facebook.react") {
         def v = details.requested.version
@@ -44,14 +44,19 @@ subprojects { proj ->
 }
 
 // ---- Fix JVM Target Compatibility ----
-// expo-modules-core sets sourceCompatibility/targetCompatibility = 1.8 for Java.
-// We need Kotlin to also target JVM 1.8 to avoid the "Inconsistent JVM Target" error.
-// We do NOT touch JavaCompile tasks to avoid breaking the Android boot classpath.
+// Align Kotlin and Java JVM targets across all subprojects.
+// Java 17 is used in CI and by AGP 8.x by default.
+// Kotlin must target the same JVM version to avoid:
+//   "Inconsistent JVM Target Compatibility Between Java and Kotlin Tasks"
 gradle.projectsEvaluated {
   subprojects { proj ->
+    proj.tasks.withType(JavaCompile).configureEach {
+      sourceCompatibility = JavaVersion.VERSION_17
+      targetCompatibility = JavaVersion.VERSION_17
+    }
     proj.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-      kotlinOptions {
-        jvmTarget = "1.8"
+      compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
       }
     }
   }
