@@ -47,22 +47,49 @@ jobs:
           chmod +x gradlew
 
       - name: Compilation de l'APK (assembleRelease)
+        continue-on-error: true
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
           GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=\"-Xmx4g -XX:MaxMetaspaceSize=512m\""
-          # Ligne magique : On indique à Gradle et Reanimated où trouver le binaire Node sous Linux
           NODE_BINARY: /usr/local/bin/node
         run: |
           cd artifacts/cde-app/android
-          ./gradlew assembleRelease --no-daemon
+          ./gradlew assembleRelease --no-daemon --info 2>&1 | tee /tmp/gradle-full.log
+          # On conserve le code de retour réel
+          exit ${PIPESTATUS[0]}
+
+      - name: Afficher les erreurs CMake détaillées
+        if: failure()
+        run: |
+          echo "===== CMakeError.log ====="
+          find /home/runner/work -name "CMakeError.log" 2>/dev/null | while read f; do
+            echo "--- $f ---"
+            cat "$f"
+          done
+
+          echo "===== CMakeOutput.log ====="
+          find /home/runner/work -name "CMakeOutput.log" 2>/dev/null | while read f; do
+            echo "--- $f ---"
+            tail -50 "$f"
+          done
+
+          echo "===== Logs .log dans .cxx ====="
+          find /home/runner/work -path "*/.cxx/*" -name "*.log" 2>/dev/null | while read f; do
+            echo "--- $f ---"
+            cat "$f"
+          done
+
+          echo "===== Extrait gradle-full.log autour de 'error' ====="
+          grep -i "error\|CMake Error\|fatal" /tmp/gradle-full.log | head -60 || true
 
       - name: Trouver l'APK généré
+        if: success()
         run: find artifacts/cde-app/android/app/build/outputs/apk/ -name "*.apk"
 
       - name: Téléverser l'APK final
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: cde-gradle-apk
           path: artifacts/cde-app/android/app/build/outputs/apk/release/*.apk
           retention-days: 30
-          
