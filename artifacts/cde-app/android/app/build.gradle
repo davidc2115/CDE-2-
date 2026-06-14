@@ -30,8 +30,10 @@ def jscFlavor = 'org.webkit:android-jsc:+'
 
 android {
     ndkVersion "27.1.12297006"
-    buildToolsVersion "35.0.0"
+    buildToolsVersion "36.0.0" // Mis à jour de 35.0.0 à 36.0.0 (ou supprimez la ligne)
     compileSdk 36
+    // ...
+}
 
     namespace "com.cde.nettoyage"
 
