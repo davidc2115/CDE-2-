@@ -25,28 +25,28 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: artifacts/cde-app/package.json
 
       - name: Nettoyer les résidus
-        working-directory: artifacts/cde-app
         run: |
+          cd artifacts/cde-app
           rm -rf node_modules
           rm -rf android/.gradle
           rm -rf android/app/build
           rm -f eas.json
 
       - name: Installer les dependances
-        working-directory: artifacts/cde-app
-        run: npm install --legacy-peer-deps
+        run: |
+          cd artifacts/cde-app
+          npm install --legacy-peer-deps
 
       - name: Securite post-install (Suppression forcee de worklets)
-        working-directory: artifacts/cde-app
-        run: rm -rf node_modules/react-native-worklets
+        run: |
+          cd artifacts/cde-app
+          rm -rf node_modules/react-native-worklets
 
       - name: Forcer le fichier eas.json requis par Expo CLI
-        working-directory: artifacts/cde-app
         run: |
+          cd artifacts/cde-app
           echo '{
             "cli": { "version": ">= 0.0.0" },
             "build": {
@@ -59,19 +59,19 @@ jobs:
         with:
           gradle-version: "8.13"
 
-      - name: Assurer les permissions Gradle exécutées par Expo
-        working-directory: artifacts/cde-app/android
-        run: chmod +x gradlew
+      - name: Assurer les permissions Gradle
+        run: |
+          cd artifacts/cde-app/android
+          chmod +x gradlew
 
       - name: Compilation Directe avec Expo CLI
-        working-directory: artifacts/cde-app
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
           GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=\"-Xmx4g -XX:MaxMetaspaceSize=512m\""
-          # On injecte explicitement le chemin absolu de Node pour que les sous-processus d'Expo ne se perdent pas
           NODE_BINARY: /usr/local/bin/node
+        # Remplacement clé : On entre physiquement dans le dossier de l'appli AVANT de lancer npx expo
         run: |
-          # npx expo prépare le bundle js puis invoque gradle en lui passant le bon environnement node
+          cd artifacts/cde-app
           npx expo run:android --variant release --no-packager
 
       - name: Localiser l'APK Généré
